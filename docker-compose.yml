@@ -1,0 +1,64 @@
+version: '3.7'
+
+services:
+  magento:
+    image: bitnami/magento:2
+    container_name: magento
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./magento-data:/var/www/html
+    environment:
+      - MAGENTO_DATABASE_HOST=mariadb
+      - MAGENTO_DATABASE_PORT=3306
+      - MAGENTO_DATABASE_USER=root
+      - MAGENTO_DATABASE_PASSWORD=root_password
+      - MAGENTO_DATABASE_NAME=bitnami_magento
+      - MAGENTO_ELASTICSEARCH_HOST=elasticsearch
+      - MAGENTO_ELASTICSEARCH_PORT=9200
+      - BITNAMI_DEBUG=true
+    depends_on:
+      - elasticsearch
+    networks:
+      - my_network
+
+  mariadb:
+    image: bitnami/mariadb:10.6
+    container_name: mariadb
+    ports:
+      - "3306:3306"
+    environment:
+      - MARIADB_USER=bn_magento
+      - MARIADB_PASSWORD=bitnami
+      - MARIADB_DATABASE=bitnami_magento
+      - MARIADB_ROOT_PASSWORD=root_password
+    volumes:
+      - mariadb_data:/usr/share/bitnami/mariadb
+    networks:
+      - my_network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es7-data:/usr/share/elasticsearch/data
+    networks:
+      - my_network
+
+volumes:
+  es7-data:
+  magento-data:
+  mariadb_data:
+
+
+networks:
+  my_network:
+    driver: bridge
